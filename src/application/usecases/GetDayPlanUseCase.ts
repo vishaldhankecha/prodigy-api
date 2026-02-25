@@ -15,7 +15,9 @@ interface OutputActivity {
   title: string;
   category: string;
   frequency: string;
+  frequencyLabel: string;
   timeMode: string;
+  timeLabel: string;
   suggestedDurationSec: number;
   plannedOccurrences: number;
   completedOccurrences: number;
@@ -28,7 +30,26 @@ export interface GetDayPlanOutput {
   title: string;
   activities: OutputActivity[];
   completionPercentage: number;
+  remainingActivitiesCount: number;
+  remainingOccurrences: number;
 }
+
+const frequencyLabelByCode: Record<string, string> = {
+  MAXIMIZE: 'Maximize',
+  DAILY_1X: '1x/Day',
+  DAILY_2X: '2x/Day',
+  DAILY_3X: '3x/Day',
+  WEEKLY_2X: '2x/Week',
+  WEEKLY_3X: '3x/Week',
+};
+
+const timeLabelByCode: Record<string, string> = {
+  MAX: 'Max.',
+  SEC_30: '30 sec',
+  SEC_60: '60 sec',
+  SEC_90: '90 sec',
+  SEC_120: '120 sec',
+};
 
 export class GetDayPlanUseCase {
   constructor(
@@ -66,7 +87,9 @@ export class GetDayPlanUseCase {
         title: activity.activity.title,
         category: activity.activity.category,
         frequency: activity.activity.frequency,
+        frequencyLabel: frequencyLabelByCode[activity.activity.frequency] ?? activity.activity.frequency,
         timeMode: activity.activity.timeMode,
+        timeLabel: timeLabelByCode[activity.activity.timeMode] ?? activity.activity.timeMode,
         suggestedDurationSec: activity.activity.suggestedDurationSec,
         plannedOccurrences: activity.plannedOccurrences,
         completedOccurrences,
@@ -76,6 +99,8 @@ export class GetDayPlanUseCase {
 
     const totalPlanned = activities.reduce((sum, activity) => sum + activity.plannedOccurrences, 0);
     const totalCompleted = activities.reduce((sum, activity) => sum + Math.min(activity.completedOccurrences, activity.plannedOccurrences), 0);
+    const remainingActivitiesCount = activities.filter((activity) => !activity.completed).length;
+    const remainingOccurrences = Math.max(totalPlanned - totalCompleted, 0);
 
     const completionPercentage = totalPlanned === 0 ? 0 : Math.round((totalCompleted / totalPlanned) * 100);
 
@@ -85,6 +110,8 @@ export class GetDayPlanUseCase {
       title: dayPlan.title,
       activities,
       completionPercentage,
+      remainingActivitiesCount,
+      remainingOccurrences,
     };
   }
 }

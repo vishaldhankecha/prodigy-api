@@ -44,10 +44,14 @@ src/
 `GET /programs/:programId/days/:day` returns schedule-aware activity rows with:
 - `category`
 - `frequency`
+- `frequencyLabel`
 - `timeMode`
+- `timeLabel`
 - `suggestedDurationSec`
 - `plannedOccurrences`
 - `completedOccurrences`
+- `remainingActivitiesCount`
+- `remainingOccurrences`
 
 PATCH body:
 

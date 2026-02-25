@@ -72,6 +72,8 @@ describe('GetDayPlanUseCase', () => {
     });
 
     expect(result.completionPercentage).toBe(50);
+    expect(result.remainingActivitiesCount).toBe(2);
+    expect(result.remainingOccurrences).toBe(2);
     expect(result.activities).toEqual([
       {
         id: 201,
@@ -79,7 +81,9 @@ describe('GetDayPlanUseCase', () => {
         title: 'Advanced Mobility Exercises',
         category: 'Athleticism',
         frequency: 'MAXIMIZE',
+        frequencyLabel: 'Maximize',
         timeMode: 'MAX',
+        timeLabel: 'Max.',
         suggestedDurationSec: 300,
         plannedOccurrences: 3,
         completedOccurrences: 2,
@@ -91,7 +95,9 @@ describe('GetDayPlanUseCase', () => {
         title: 'Visual Solfege',
         category: 'Music',
         frequency: 'DAILY_1X',
+        frequencyLabel: '1x/Day',
         timeMode: 'SEC_30',
+        timeLabel: '30 sec',
         suggestedDurationSec: 30,
         plannedOccurrences: 1,
         completedOccurrences: 0,
