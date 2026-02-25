@@ -39,25 +39,24 @@ export class MarkActivityCompleteUseCase {
       throw new ForbiddenError('User is not enrolled in this program');
     }
 
-    const completedOccurrences = await this.activityProgressRepository.countCompletions(input.userId, input.dayPlanActivityId);
-    if (completedOccurrences >= scheduledActivity.plannedOccurrences) {
+    const completion = await this.activityProgressRepository.completeNextOccurrence(
+      input.userId,
+      input.dayPlanActivityId,
+      scheduledActivity.plannedOccurrences,
+    );
+    if (!completion) {
       throw new ValidationError('All planned occurrences are already completed for this activity');
     }
 
-    const nextOccurrence = completedOccurrences + 1;
-    const progress = await this.activityProgressRepository.createCompletion(
-      input.userId,
-      input.dayPlanActivityId,
-      nextOccurrence,
-    );
+    const { progress, completedOccurrences } = completion;
 
     return {
       dayPlanActivityId: progress.dayPlanActivityId,
       userId: progress.userId,
       completedOccurrence: progress.occurrenceNumber,
-      completedOccurrences: nextOccurrence,
+      completedOccurrences,
       plannedOccurrences: scheduledActivity.plannedOccurrences,
-      completed: nextOccurrence >= scheduledActivity.plannedOccurrences,
+      completed: completedOccurrences >= scheduledActivity.plannedOccurrences,
       completedAt: progress.completedAt,
     };
   }

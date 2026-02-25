@@ -56,8 +56,7 @@ describe('GetDayPlanUseCase', () => {
         { dayPlanActivityId: 201, userId: 7, occurrenceNumber: 1, completedAt: new Date() },
         { dayPlanActivityId: 201, userId: 7, occurrenceNumber: 2, completedAt: new Date() },
       ]),
-      createCompletion: jest.fn(),
-      countCompletions: jest.fn(),
+      completeNextOccurrence: jest.fn(),
     };
 
     const programEnrollmentRepository: ProgramEnrollmentRepository = {

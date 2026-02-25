@@ -1,5 +1,6 @@
+import { Prisma } from '@prisma/client';
 import type { Progress } from '../../domain/entities/Progress';
-import type { ActivityProgressRepository } from '../../domain/repositories/ActivityProgressRepository';
+import type { ActivityProgressRepository, CompletionResult } from '../../domain/repositories/ActivityProgressRepository';
 import { getPrisma } from '../database/prisma';
 
 export class PrismaActivityProgressRepository implements ActivityProgressRepository {
@@ -24,31 +25,55 @@ export class PrismaActivityProgressRepository implements ActivityProgressReposit
     }));
   }
 
-  async createCompletion(userId: number, dayPlanActivityId: number, occurrenceNumber: number): Promise<Progress> {
+  async completeNextOccurrence(
+    userId: number,
+    dayPlanActivityId: number,
+    plannedOccurrences: number,
+  ): Promise<CompletionResult | null> {
     const prisma = getPrisma();
-    const result = await prisma.activityProgress.create({
-      data: {
-        userId,
-        dayPlanActivityId,
-        occurrenceNumber,
-      },
-    });
 
-    return {
-      dayPlanActivityId: result.dayPlanActivityId,
-      userId: result.userId,
-      occurrenceNumber: result.occurrenceNumber,
-      completedAt: result.completedAt,
-    };
-  }
+    try {
+      return await prisma.$transaction(async (tx) => {
+        // Lock the schedule row so concurrent completion attempts serialize.
+        await tx.$queryRawUnsafe('SELECT id FROM `DayPlanActivity` WHERE id = ? FOR UPDATE', dayPlanActivityId);
 
-  async countCompletions(userId: number, dayPlanActivityId: number): Promise<number> {
-    const prisma = getPrisma();
-    return prisma.activityProgress.count({
-      where: {
-        userId,
-        dayPlanActivityId,
-      },
-    });
+        const completedOccurrences = await tx.activityProgress.count({
+          where: {
+            userId,
+            dayPlanActivityId,
+          },
+        });
+
+        if (completedOccurrences >= plannedOccurrences) {
+          return null;
+        }
+
+        const nextOccurrence = completedOccurrences + 1;
+        const created = await tx.activityProgress.create({
+          data: {
+            userId,
+            dayPlanActivityId,
+            occurrenceNumber: nextOccurrence,
+          },
+        });
+
+        return {
+          progress: {
+            dayPlanActivityId: created.dayPlanActivityId,
+            userId: created.userId,
+            occurrenceNumber: created.occurrenceNumber,
+            completedAt: created.completedAt,
+          },
+          completedOccurrences: nextOccurrence,
+        };
+      }, {
+        isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
+      });
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+        return null;
+      }
+      throw error;
+    }
   }
 }

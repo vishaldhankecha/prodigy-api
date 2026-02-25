@@ -17,12 +17,14 @@ describe('MarkActivityCompleteUseCase', () => {
 
     const activityProgressRepository: ActivityProgressRepository = {
       getByUserAndScheduledActivityIds: jest.fn(),
-      countCompletions: jest.fn().mockResolvedValue(1),
-      createCompletion: jest.fn().mockResolvedValue({
-        dayPlanActivityId: 44,
-        userId: 99,
-        occurrenceNumber: 2,
-        completedAt,
+      completeNextOccurrence: jest.fn().mockResolvedValue({
+        completedOccurrences: 2,
+        progress: {
+          dayPlanActivityId: 44,
+          userId: 99,
+          occurrenceNumber: 2,
+          completedAt,
+        },
       }),
     };
 

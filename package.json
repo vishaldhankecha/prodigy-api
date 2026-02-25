@@ -9,8 +9,10 @@
     "dev": "ts-node-dev --respawn --transpile-only src/main.ts",
     "start": "node dist/main.js",
     "seed": "ts-node --transpile-only -P tsconfig.seed.json prisma/seed.ts",
+    "schedule:regenerate": "ts-node --transpile-only src/scripts/regenerateSchedule.ts",
     "prisma:generate": "prisma generate",
-    "prisma:migrate": "prisma migrate dev --name init",
+    "prisma:migrate": "prisma migrate deploy",
+    "prisma:migrate:dev": "prisma migrate dev --name init",
     "db:up": "docker-compose up -d",
     "db:down": "docker-compose down",
     "db:reset": "docker-compose down -v && docker-compose up -d"

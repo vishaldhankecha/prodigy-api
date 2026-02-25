@@ -66,6 +66,9 @@ export class PrismaDayPlanRepository implements DayPlanRepository {
       },
       include: {
         activities: {
+          where: {
+            isActive: true,
+          },
           include: {
             activity: true,
           },
@@ -90,6 +93,9 @@ export class PrismaDayPlanRepository implements DayPlanRepository {
       },
       include: {
         activities: {
+          where: {
+            isActive: true,
+          },
           include: {
             activity: true,
           },

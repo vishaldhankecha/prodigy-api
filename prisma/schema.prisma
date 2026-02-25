@@ -98,6 +98,7 @@ model DayPlanActivity {
   activityId         Int
   plannedOccurrences Int                @default(1)
   sortOrder          Int                @default(1)
+  isActive           Boolean            @default(true)
   dayPlan            DayPlan            @relation(fields: [dayPlanId], references: [id], onDelete: Cascade)
   activity           Activity           @relation(fields: [activityId], references: [id], onDelete: Cascade)
   progresses         ActivityProgress[]
