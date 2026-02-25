@@ -1,0 +1,153 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+enum ActivityFrequency {
+  MAXIMIZE
+  DAILY_1X
+  DAILY_2X
+  DAILY_3X
+  WEEKLY_2X
+  WEEKLY_3X
+}
+
+enum ActivityTimeMode {
+  MAX
+  SEC_30
+  SEC_60
+  SEC_90
+  SEC_120
+}
+
+enum EnrollmentStatus {
+  ACTIVE
+  PAUSED
+  COMPLETED
+}
+
+enum SchedulingRuleType {
+  DAILY
+  WEEKLY
+}
+
+model Program {
+  id          Int        @id @default(autoincrement())
+  name        String
+  description String?
+  totalDays   Int        @default(30)
+  dayPlans    DayPlan[]
+  activities  Activity[]
+  enrollments ProgramEnrollment[]
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+}
+
+model DayPlan {
+  id         Int               @id @default(autoincrement())
+  programId  Int
+  dayNumber  Int
+  title      String
+  program    Program           @relation(fields: [programId], references: [id], onDelete: Cascade)
+  activities DayPlanActivity[]
+  createdAt  DateTime          @default(now())
+  updatedAt  DateTime          @updatedAt
+
+  @@unique([programId, dayNumber])
+  @@index([programId, dayNumber])
+}
+
+model Activity {
+  id                     Int               @id @default(autoincrement())
+  programId              Int
+  title                  String
+  category               String
+  frequency              ActivityFrequency
+  timeMode               ActivityTimeMode
+  suggestedDurationSec   Int
+  defaultOccurrences     Int
+  sortOrder              Int               @default(1)
+  program                Program           @relation(fields: [programId], references: [id], onDelete: Cascade)
+  dayPlanActivities      DayPlanActivity[]
+  scheduleRule           ActivityScheduleRule?
+  createdAt              DateTime          @default(now())
+  updatedAt              DateTime          @updatedAt
+
+  @@index([programId, sortOrder])
+}
+
+model ActivityScheduleRule {
+  id                Int               @id @default(autoincrement())
+  activityId        Int               @unique
+  ruleType          SchedulingRuleType
+  occurrencesPerDay Int               @default(1)
+  weeklyDaysCsv     String?
+  activity          Activity          @relation(fields: [activityId], references: [id], onDelete: Cascade)
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  @@index([ruleType])
+}
+
+model DayPlanActivity {
+  id                 Int                @id @default(autoincrement())
+  dayPlanId          Int
+  activityId         Int
+  plannedOccurrences Int                @default(1)
+  sortOrder          Int                @default(1)
+  dayPlan            DayPlan            @relation(fields: [dayPlanId], references: [id], onDelete: Cascade)
+  activity           Activity           @relation(fields: [activityId], references: [id], onDelete: Cascade)
+  progresses         ActivityProgress[]
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+
+  @@unique([dayPlanId, activityId])
+  @@index([dayPlanId, sortOrder])
+  @@index([activityId])
+}
+
+model User {
+  id          Int                 @id @default(autoincrement())
+  email       String              @unique
+  name        String?
+  progresses  ActivityProgress[]
+  enrollments ProgramEnrollment[]
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+}
+
+model ActivityProgress {
+  id                Int             @id @default(autoincrement())
+  userId            Int
+  dayPlanActivityId Int
+  occurrenceNumber  Int
+  completedAt       DateTime        @default(now())
+  user              User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  dayPlanActivity   DayPlanActivity @relation(fields: [dayPlanActivityId], references: [id], onDelete: Cascade)
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+
+  @@unique([userId, dayPlanActivityId, occurrenceNumber])
+  @@index([userId])
+  @@index([dayPlanActivityId])
+}
+
+model ProgramEnrollment {
+  id        Int              @id @default(autoincrement())
+  userId    Int
+  programId Int
+  status    EnrollmentStatus @default(ACTIVE)
+  startDate DateTime         @default(now())
+  endDate   DateTime?
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  program   Program          @relation(fields: [programId], references: [id], onDelete: Cascade)
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+
+  @@unique([userId, programId])
+  @@index([userId, status])
+  @@index([programId, status])
+}
