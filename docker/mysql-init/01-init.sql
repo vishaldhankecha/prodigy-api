@@ -1,0 +1,3 @@
+CREATE DATABASE IF NOT EXISTS prodigy_shadow;
+GRANT ALL PRIVILEGES ON prodigy_shadow.* TO 'appuser'@'%';
+FLUSH PRIVILEGES;
