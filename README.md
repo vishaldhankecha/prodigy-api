@@ -61,6 +61,7 @@ Important:
 - `:id` in `PATCH /activities/:id/complete` is the `DayPlanActivity.id` (the scheduled activity id for that day), returned by the day endpoint.
 - `userId` must be actively enrolled in the requested program (`ProgramEnrollment.status = ACTIVE`), otherwise the API returns `403`.
 - Scheduling is rule-driven via `ActivityScheduleRule` (`DAILY` / `WEEKLY` + occurrences + weekly day pattern).
+- After editing rules, regenerate materialized day schedules with `npm run schedule:regenerate -- --programId=1`.
 
 Swagger UI:
 
@@ -84,8 +85,10 @@ SHADOW_DATABASE_URL="mysql://root:rootpassword@127.0.0.1:3307/prodigy_shadow"
 - `npm run start`: run compiled app from `dist/`
 - `npm test`: run unit tests
 - `npm run prisma:generate`: generate Prisma client
-- `npm run prisma:migrate`: apply Prisma dev migrations
+- `npm run prisma:migrate`: apply checked-in migrations (non-interactive)
+- `npm run prisma:migrate:dev`: create/apply a new migration in local development
 - `npm run seed`: seed sample data
+- `npm run schedule:regenerate`: rebuild `DayPlanActivity` from `ActivityScheduleRule`
 - `npm run db:up`: start MySQL + Adminer with Docker
 - `npm run db:down`: stop Docker services
 - `npm run db:reset`: recreate containers and volumes
